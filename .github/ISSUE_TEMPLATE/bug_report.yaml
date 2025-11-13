@@ -58,4 +58,4 @@ body:
       description: Which version or commit hash of Lodestar are you running? 
       placeholder: v1.8.0 or a4b29cf
     validations:
-      required: true
+      required: false
