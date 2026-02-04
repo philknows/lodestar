@@ -1,0 +1,28 @@
+name: Lodestar Standup
+description: Create a new Lodestar Standup call (recurring or one-time)
+title: "Lodestar Standup <call #>, <call date>"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Title: Lodestar Standup; &lt;call #&gt;, &lt;call date&gt;
+        e.g. "Lodestar Standup #420, April 20, 2026"
+
+  - type: input
+    id: date-time
+    attributes:
+      label: UTC Date & Time
+      description: Meeting date and time in UTC format, e.g. "Apr 20, 2026, 14:00 UTC" (Format important for automation!)
+      placeholder: "Apr 20, 2026, 14:00 UTC"
+    validations:
+      required: true
+
+  - type: textarea
+    id: agenda
+    attributes:
+      label: Agenda
+      description: List the agenda items for this meeting
+      placeholder: |
+        - Agenda point 1
+        - Agenda point 2
+        - Agenda point n
