@@ -1,15 +1,12 @@
 import {generateKeyPair} from "@libp2p/crypto/keys";
 import {afterAll, beforeAll, bench, describe} from "@chainsafe/benchmark";
-import {fromHexString} from "@chainsafe/ssz";
 import {config} from "@lodestar/config/default";
 import {LevelDbController} from "@lodestar/db/controller/level";
-import {SAFE_SLOTS_TO_IMPORT_OPTIMISTICALLY} from "@lodestar/params";
 import {CachedBeaconStateAltair} from "@lodestar/state-transition";
 import {defaultOptions as defaultValidatorOptions} from "@lodestar/validator";
 import {generatePerfTestCachedStateAltair} from "../../../../../state-transition/test/perf/util.js";
 import {BeaconChain} from "../../../../src/chain/index.js";
 import {BlockType, produceBlockBody} from "../../../../src/chain/produceBlock/produceBlockBody.js";
-import {Eth1ForBlockProductionDisabled} from "../../../../src/eth1/index.js";
 import {ExecutionEngineDisabled} from "../../../../src/execution/engine/index.js";
 import {ArchiveMode, BeaconDb} from "../../../../src/index.js";
 import {testLogger} from "../../../utils/logger.js";
@@ -31,7 +28,6 @@ describe("produceBlockBody", () => {
         proposerBoost: true,
         proposerBoostReorg: true,
         computeUnrealized: false,
-        safeSlotsToImportOptimistically: SAFE_SLOTS_TO_IMPORT_OPTIMISTICALLY,
         disableArchiveOnCheckpoint: true,
         suggestedFeeRecipient: defaultValidatorOptions.suggestedFeeRecipient,
         skipCreateStateCacheIfAvailable: true,
@@ -42,6 +38,8 @@ describe("produceBlockBody", () => {
       {
         privateKey: await generateKeyPair("secp256k1"),
         config: state.config,
+        pubkey2index: state.epochCtx.pubkey2index,
+        index2pubkey: state.epochCtx.index2pubkey,
         db,
         dataDir: ".",
         dbName: ".",
@@ -51,7 +49,6 @@ describe("produceBlockBody", () => {
         validatorMonitor: null,
         anchorState: state,
         isAnchorStateFinalized: true,
-        eth1: new Eth1ForBlockProductionDisabled(),
         executionEngine: new ExecutionEngineDisabled(),
       }
     );
@@ -82,14 +79,14 @@ describe("produceBlockBody", () => {
         slot: slot + 1,
         graffiti: Buffer.alloc(32),
         randaoReveal: Buffer.alloc(96),
-        parentBlockRoot: fromHexString(head.blockRoot),
+        parentBlock: head,
       });
 
       await produceBlockBody.call(chain, BlockType.Full, state, {
         slot: slot + 1,
         graffiti: Buffer.alloc(32),
         randaoReveal: Buffer.alloc(96),
-        parentBlockRoot: fromHexString(head.blockRoot),
+        parentBlock: head,
         proposerIndex,
         proposerPubKey,
         commonBlockBodyPromise,

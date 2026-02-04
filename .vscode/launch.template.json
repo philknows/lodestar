@@ -42,7 +42,7 @@
       "name": "Test Current File",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/node_modules/.bin/vitest",
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
       "args": [
         "--run",
         "${file}",
@@ -50,7 +50,10 @@
         "${input:testName}",
         "--pool",
         "forks",
-        "--poolOptions.forks.singleFork"
+        "--maxWorkers",
+        "1",
+        "--isolate",
+        "true"
       ],
       "cwd": "${workspaceFolder}/${input:packageName}",
       "console": "integratedTerminal",

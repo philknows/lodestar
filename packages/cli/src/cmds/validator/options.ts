@@ -3,7 +3,7 @@ import {CliCommandOptions} from "@lodestar/utils";
 import {defaultOptions} from "@lodestar/validator";
 import {coerceCors, enabledAllBashFriendly} from "../../options/beaconNodeOptions/api.js";
 import {LogArgs, logOptions} from "../../options/logOptions.js";
-import {ensure0xPrefix} from "../../util/index.js";
+import {ensure0xPrefix, parseRange} from "../../util/index.js";
 import {keymanagerRestApiServerOptsDefault} from "./keymanager/server.js";
 import {defaultAccountPaths, defaultValidatorPaths} from "./paths.js";
 
@@ -61,6 +61,8 @@ export type IValidatorCliArgs = AccountValidatorArgs &
     "http.requestWireFormat"?: string;
     "http.responseWireFormat"?: string;
 
+    "clock.skipSlots"?: boolean;
+
     "externalSigner.url"?: string;
     "externalSigner.pubkeys"?: string[];
     "externalSigner.fetch"?: boolean;
@@ -68,9 +70,9 @@ export type IValidatorCliArgs = AccountValidatorArgs &
 
     distributed?: boolean;
 
-    interopIndexes?: string;
+    interopIndexes?: number[];
     fromMnemonic?: string;
-    mnemonicIndexes?: string;
+    mnemonicIndexes?: number[];
 
     metrics?: boolean;
     "metrics.port"?: number;
@@ -331,6 +333,12 @@ export const validatorOptions: CliCommandOptions<IValidatorCliArgs> = {
     group: "http",
   },
 
+  "clock.skipSlots": {
+    hidden: true,
+    description: "Skip slots when tasks take more than one slot to run",
+    type: "boolean",
+  },
+
   // External signer
 
   "externalSigner.url": {
@@ -445,8 +453,13 @@ export const validatorOptions: CliCommandOptions<IValidatorCliArgs> = {
 
   interopIndexes: {
     hidden: true,
-    description: "Range (inclusive) of interop key indexes to validate with: 0..16",
-    type: "string",
+    description: "Range(s) (inclusive) of interop key indexes to validate with: 0..16",
+    type: "array",
+    coerce: (indexes: string[]): number[] =>
+      // Parse ["11..13,15..17"] to ["11..13", "15..17"]
+      indexes
+        .flatMap((item) => item.split(","))
+        .flatMap(parseRange),
   },
 
   fromMnemonic: {
@@ -457,7 +470,12 @@ export const validatorOptions: CliCommandOptions<IValidatorCliArgs> = {
 
   mnemonicIndexes: {
     hidden: true,
-    description: "UNSAFE. Range (inclusive) of mnemonic key indexes to validate with: 0..16",
-    type: "string",
+    description: "UNSAFE. Range(s) (inclusive) of mnemonic key indexes to validate with: 0..16",
+    type: "array",
+    coerce: (indexes: string[]): number[] =>
+      // Parse ["11..13,15..17"] to ["11..13", "15..17"]
+      indexes
+        .flatMap((item) => item.split(","))
+        .flatMap(parseRange),
   },
 };

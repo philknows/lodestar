@@ -1,11 +1,16 @@
 import {beforeAll, beforeEach, describe, expect, it} from "vitest";
+import {createBeaconConfig} from "@lodestar/config";
+import {chainConfig as chainConfigDef} from "@lodestar/config/default";
 import {ACTIVE_PRESET, PresetName, SLOTS_PER_EPOCH, SLOTS_PER_HISTORICAL_ROOT} from "@lodestar/params";
 import {CachedBeaconStateAllForks, computeEpochAtSlot, computeStartSlotAtEpoch} from "@lodestar/state-transition";
 import {RootHex, phase0} from "@lodestar/types";
 import {mapValues, toHexString} from "@lodestar/utils";
-import {FIFOBlockStateCache, toCheckpointHex} from "../../../../src/chain/index.js";
+import {FIFOBlockStateCache} from "../../../../src/chain/index.js";
 import {checkpointToDatastoreKey} from "../../../../src/chain/stateCache/datastore/index.js";
-import {PersistentCheckpointStateCache} from "../../../../src/chain/stateCache/persistentCheckpointsCache.js";
+import {
+  PersistentCheckpointStateCache,
+  toCheckpointHex,
+} from "../../../../src/chain/stateCache/persistentCheckpointsCache.js";
 import {CheckpointHex} from "../../../../src/chain/stateCache/types.js";
 import {getTestDatastore} from "../../../utils/chain/stateCache/datastore.js";
 import {testLogger} from "../../../utils/logger.js";
@@ -27,6 +32,7 @@ describe("PersistentCheckpointStateCache", () => {
   let fileApisBuffer: Map<string, Uint8Array>;
   let states: Record<"cp0a" | "cp0b" | "cp1" | "cp2", CachedBeaconStateAllForks>;
   let stateBytes: Record<"cp0a" | "cp0b" | "cp1" | "cp2", Uint8Array>;
+  const config = createBeaconConfig(chainConfigDef, Buffer.alloc(32, 0xaa));
 
   beforeAll(() => {
     root0a = Buffer.alloc(32);
@@ -91,6 +97,7 @@ describe("PersistentCheckpointStateCache", () => {
     const datastore = getTestDatastore(fileApisBuffer);
     cache = new PersistentCheckpointStateCache(
       {
+        config,
         datastore,
         logger: testLogger(),
         blockStateCache: new FIFOBlockStateCache({}, {}),
@@ -165,6 +172,7 @@ describe("PersistentCheckpointStateCache", () => {
       const datastore = getTestDatastore(fileApisBuffer);
       cache = new PersistentCheckpointStateCache(
         {
+          config,
           datastore,
           logger: testLogger(),
           blockStateCache: new FIFOBlockStateCache({}, {}),
@@ -241,6 +249,7 @@ describe("PersistentCheckpointStateCache", () => {
       const datastore = getTestDatastore(fileApisBuffer);
       cache = new PersistentCheckpointStateCache(
         {
+          config,
           datastore,
           logger: testLogger(),
           blockStateCache: new FIFOBlockStateCache({}, {}),
@@ -546,6 +555,7 @@ describe("PersistentCheckpointStateCache", () => {
       const datastore = getTestDatastore(fileApisBuffer);
       cache = new PersistentCheckpointStateCache(
         {
+          config,
           datastore,
           logger: testLogger(),
           blockStateCache: new FIFOBlockStateCache({}, {}),
@@ -817,6 +827,7 @@ describe("PersistentCheckpointStateCache", () => {
         const datastore = getTestDatastore(fileApisBuffer);
         cache = new PersistentCheckpointStateCache(
           {
+            config,
             datastore,
             logger: testLogger(),
             blockStateCache: new FIFOBlockStateCache({}, {}),
@@ -907,6 +918,7 @@ describe("PersistentCheckpointStateCache", () => {
         const datastore = getTestDatastore(fileApisBuffer);
         cache = new PersistentCheckpointStateCache(
           {
+            config,
             datastore,
             logger: testLogger(),
             blockStateCache: new FIFOBlockStateCache({}, {}),

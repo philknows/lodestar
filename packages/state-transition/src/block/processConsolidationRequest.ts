@@ -1,6 +1,6 @@
 import {FAR_FUTURE_EPOCH, MIN_ACTIVATION_BALANCE, PENDING_CONSOLIDATIONS_LIMIT} from "@lodestar/params";
 import {electra, ssz} from "@lodestar/types";
-import {CachedBeaconStateElectra} from "../types.js";
+import {CachedBeaconStateElectra, CachedBeaconStateGloas} from "../types.js";
 import {hasEth1WithdrawalCredential} from "../util/capella.js";
 import {
   hasCompoundingWithdrawalCredential,
@@ -13,7 +13,7 @@ import {getConsolidationChurnLimit, getPendingBalanceToWithdraw, isActiveValidat
 
 // TODO Electra: Clean up necessary as there is a lot of overlap with isValidSwitchToCompoundRequest
 export function processConsolidationRequest(
-  state: CachedBeaconStateElectra,
+  state: CachedBeaconStateElectra | CachedBeaconStateGloas,
   consolidationRequest: electra.ConsolidationRequest
 ): void {
   const {sourcePubkey, targetPubkey, sourceAddress} = consolidationRequest;
@@ -103,7 +103,7 @@ export function processConsolidationRequest(
  * Determine if we should set consolidation target validator to compounding credential
  */
 function isValidSwitchToCompoundRequest(
-  state: CachedBeaconStateElectra,
+  state: CachedBeaconStateElectra | CachedBeaconStateGloas,
   consolidationRequest: electra.ConsolidationRequest
 ): boolean {
   const {sourcePubkey, targetPubkey, sourceAddress} = consolidationRequest;

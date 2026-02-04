@@ -124,7 +124,7 @@ export async function validateGossipBlobSidecar(
   // [IGNORE] The block's parent (defined by block.parent_root) has been seen (via both gossip and non-gossip sources) (a client MAY queue blocks for processing once the parent block is retrieved).
   // [REJECT] The block's parent (defined by block.parent_root) passes validation.
   const blockState = await chain.regen
-    .getBlockSlotState(parentRoot, blobSlot, {dontTransferCache: true}, RegenCaller.validateGossipBlock)
+    .getBlockSlotState(parentBlock, blobSlot, {dontTransferCache: true}, RegenCaller.validateGossipBlock)
     .catch(() => {
       throw new BlobSidecarGossipError(GossipAction.IGNORE, {
         code: BlobSidecarErrorCode.PARENT_UNKNOWN,
@@ -135,15 +135,24 @@ export async function validateGossipBlobSidecar(
     });
 
   // [REJECT] The proposer signature, signed_beacon_block.signature, is valid with respect to the proposer_index pubkey.
-  const signatureSet = getBlockHeaderProposerSignatureSetByParentStateSlot(blockState, blobSidecar.signedBlockHeader);
-  // Don't batch so verification is not delayed
-  if (!(await chain.bls.verifySignatureSets([signatureSet], {verifyOnMainThread: true}))) {
-    throw new BlobSidecarGossipError(GossipAction.REJECT, {
-      code: BlobSidecarErrorCode.PROPOSAL_SIGNATURE_INVALID,
-      blockRoot: blockHex,
-      index: blobSidecar.index,
-      slot: blobSlot,
-    });
+  const signature = blobSidecar.signedBlockHeader.signature;
+  if (!chain.seenBlockInputCache.isVerifiedProposerSignature(blobSlot, blockHex, signature)) {
+    const signatureSet = getBlockHeaderProposerSignatureSetByParentStateSlot(
+      chain.config,
+      blockState.slot,
+      blobSidecar.signedBlockHeader
+    );
+    // Don't batch so verification is not delayed
+    if (!(await chain.bls.verifySignatureSets([signatureSet], {verifyOnMainThread: true}))) {
+      throw new BlobSidecarGossipError(GossipAction.REJECT, {
+        code: BlobSidecarErrorCode.PROPOSAL_SIGNATURE_INVALID,
+        blockRoot: blockHex,
+        index: blobSidecar.index,
+        slot: blobSlot,
+      });
+    }
+
+    chain.seenBlockInputCache.markVerifiedProposerSignature(blobSlot, blockHex, signature);
   }
 
   // verify if the blob inclusion proof is correct
@@ -231,22 +240,25 @@ export async function validateBlockBlobSidecars(
   }
 
   if (chain !== null) {
-    const headState = await chain.getHeadState();
-    const signatureSet = getBlockHeaderProposerSignatureSetByHeaderSlot(headState, firstSidecarSignedBlockHeader);
+    const blockRootHex = toRootHex(blockRoot);
+    const signature = firstSidecarSignedBlockHeader.signature;
+    if (!chain.seenBlockInputCache.isVerifiedProposerSignature(blockSlot, blockRootHex, signature)) {
+      const signatureSet = getBlockHeaderProposerSignatureSetByHeaderSlot(chain.config, firstSidecarSignedBlockHeader);
 
-    if (
-      !(await chain.bls.verifySignatureSets([signatureSet], {
-        batchable: true,
-        priority: true,
-        verifyOnMainThread: false,
-      }))
-    ) {
-      throw new BlobSidecarValidationError({
-        code: BlobSidecarErrorCode.PROPOSAL_SIGNATURE_INVALID,
-        blockRoot: toRootHex(blockRoot),
-        slot: blockSlot,
-        index: blobSidecars[0].index,
-      });
+      if (
+        !(await chain.bls.verifySignatureSets([signatureSet], {
+          verifyOnMainThread: true,
+        }))
+      ) {
+        throw new BlobSidecarValidationError({
+          code: BlobSidecarErrorCode.PROPOSAL_SIGNATURE_INVALID,
+          blockRoot: blockRootHex,
+          slot: blockSlot,
+          index: blobSidecars[0].index,
+        });
+      }
+
+      chain.seenBlockInputCache.markVerifiedProposerSignature(blockSlot, blockRootHex, signature);
     }
   }
 

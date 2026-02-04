@@ -2,7 +2,7 @@ import type {ChainForkConfig} from "@lodestar/config";
 import {MaybeValidExecutionStatus} from "@lodestar/fork-choice";
 import {ForkSeq} from "@lodestar/params";
 import {CachedBeaconStateAllForks, DataAvailabilityStatus, computeEpochAtSlot} from "@lodestar/state-transition";
-import type {Slot, fulu} from "@lodestar/types";
+import type {IndexedAttestation, Slot, fulu} from "@lodestar/types";
 import {IBlockInput} from "./blockInput/types.js";
 
 export enum GossipedInputType {
@@ -78,8 +78,6 @@ export type ImportBlockOpts = {
   validBlobSidecars?: BlobSidecarValidation;
   /** Seen timestamp seconds */
   seenTimestampSec?: number;
-  /** Set to true if persist block right at verification time */
-  eagerPersistBlock?: boolean;
 };
 
 /**
@@ -96,6 +94,10 @@ export type FullyVerifiedBlock = {
    */
   executionStatus: MaybeValidExecutionStatus;
   dataAvailabilityStatus: DataAvailabilityStatus;
+  /**
+   * Pre-computed indexed attestations from signature verification to avoid duplicate work
+   */
+  indexedAttestations: IndexedAttestation[];
   /** Seen timestamp seconds */
   seenTimestampSec: number;
 };

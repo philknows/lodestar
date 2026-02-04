@@ -1,4 +1,3 @@
-import {SAFE_SLOTS_TO_IMPORT_OPTIMISTICALLY} from "@lodestar/params";
 import {defaultOptions as defaultValidatorOptions} from "@lodestar/validator";
 import {DEFAULT_ARCHIVE_MODE} from "./archiveStore/constants.js";
 import {ArchiveMode, ArchiveStoreOpts} from "./archiveStore/interface.js";
@@ -46,7 +45,6 @@ export type IChainOptions = BlockProcessOpts &
     broadcastValidationStrictness?: string;
     minSameMessageSignatureSetsToBatch: number;
     archiveDateEpochs?: number;
-    nHistoricalStates?: boolean;
     nHistoricalStatesFileDataStore?: boolean;
   };
 
@@ -56,10 +54,6 @@ export type BlockProcessOpts = {
    * Will double processing times. Use only for debugging purposes.
    */
   disableBlsBatchVerify?: boolean;
-  /**
-   * Override SAFE_SLOTS_TO_IMPORT_OPTIMISTICALLY
-   */
-  safeSlotsToImportOptimistically?: number;
   /**
    * Assert progressive balances the same to EpochTransitionCache
    */
@@ -109,7 +103,6 @@ export const defaultChainOptions: IChainOptions = {
   proposerBoost: true,
   proposerBoostReorg: true,
   computeUnrealized: true,
-  safeSlotsToImportOptimistically: SAFE_SLOTS_TO_IMPORT_OPTIMISTICALLY,
   suggestedFeeRecipient: defaultValidatorOptions.suggestedFeeRecipient,
   serveHistoricalState: false,
   assertCorrectProgressiveBalances: false,
@@ -125,7 +118,6 @@ export const defaultChainOptions: IChainOptions = {
   // batching too much may block the I/O thread so if useWorker=false, suggest this value to be 32
   // since this batch attestation work is designed to work with useWorker=true, make this the lowest value
   minSameMessageSignatureSetsToBatch: 2,
-  nHistoricalStates: true,
   // as of Feb 2025, this option turned out to be very useful:
   //   - it allows to share a persisted checkpoint state to other nodes
   //   - users can prune the persisted checkpoint state files manually to save disc space
