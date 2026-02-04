@@ -1,6 +1,5 @@
-name: Lodestar Standup
-description: Create a new Lodestar Standup call (recurring or one-time)
 title: "Lodestar Standup <call #>, <call date>"
+labels: ["Standups" ]
 body:
   - type: markdown
     attributes:
